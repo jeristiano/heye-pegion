@@ -18,18 +18,6 @@ use Hyperf\Utils\Codec\Json;
  */
 class WebSocketController extends BaseNamespace
 {
-//
-//    public function __construct (Sender $sender, SidProviderInterface $sidProvider)
-//    {
-//        $this->on('disconnect', function (Socket $socket) {
-//            $this->adapter->del($socket->getSid());
-//            $this->closeSocket($socket);
-//        });
-//
-//        parent::__construct($sender, $sidProvider);
-//
-//
-//    }
 
     private $colors = ['aliceblue', 'antiquewhite', 'aqua', 'aquamarine', 'pink', 'red', 'green', 'orange', 'blue', 'blueviolet', 'brown', 'burlywood', 'cadetblue'];
 
