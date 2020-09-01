@@ -1,0 +1,186 @@
+<?php
+
+declare(strict_types=1);
+/**
+ * This file is part of Hyperf.
+ * @link     https://www.hyperf.io
+ * @document https://doc.hyperf.io
+ * @contact  group@hyperf.io
+ * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
+ */
+
+namespace HyperfTest\Cases;
+
+use App\Model\FriendChatHistory;
+use App\Model\FriendRelation;
+use App\Model\GroupRelation;
+use App\Model\User;
+use App\Model\UserApplication;
+use App\Service\FriendService;
+use App\Service\UserService;
+use Carbon\Carbon;
+use HyperfTest\HttpTestCase;
+
+/**
+ * @internal
+ * @coversNothing
+ */
+class ExampleTest extends HttpTestCase
+{
+
+
+    public function testExample ()
+    {
+        $res= collect(['aliceblue', 'antiquewhite', 'aqua', 'aquamarine', 'pink', 'red', 'green',
+                'orange', 'blue', 'blueviolet', 'brown', 'burlywood', 'cadetblue'])->random(1)->toArray();
+        var_dump($res);
+    }
+
+    public function testGetApplication ()
+    {
+        $uid = 39;
+        $page = 1;
+        $size = 10;
+
+        $messages = UserApplication::query()
+            ->where('uid', $uid)
+            ->whereNull('deleted_at')
+            ->orWhere('receiver_id', $uid)
+            ->forPage($page, $size)
+            ->orderByDesc('created_at')
+            ->get()
+            ->toArray();
+        $this->assertIsArray($messages, 'res is an array');
+
+        foreach ($messages as $key => $value) {
+            if ($uid != $value['uid']) {
+                $appIds[] = $value['id'];
+            }
+            if ($value['application_type'] == UserApplication::APPLICATION_TYPE_GROUP) {
+                $groupIds[] = $value['group_id'];
+            }
+
+            $userIds[] = $value['uid'];
+            $userIds[] = $value['receiver_id'];
+
+        }
+        $userIds = collect($userIds ?? [])->unique()->all();
+        $resu = [$appIds ?? [], $groupIds ?? [], $userIds];
+
+        $userInfos = User::query()->whereNull('deleted_at')
+            ->whereIn('id', $userIds)
+            ->get()->mapWithKeys(function ($item) {
+                return [$item['id'] => $item];
+            })->toJson();
+        var_dump($userInfos);
+    }
+
+    public function testGetRecommendedFriend ()
+    {
+        $uid = 39;
+        $friendIds = FriendRelation::query()->where('uid', $uid)->pluck('friend_id');
+        $friendIds[] = $uid;
+
+        $userInfos = User::query()
+            ->whereNull('deleted_at')
+            ->orderBy('created_at', 'desc')
+            ->whereNotIn('id', $friendIds)
+            ->limit(20)
+            ->get()
+            ->toArray();
+
+//        $friendIds=  make(FriendRelation::class)->getFriendIds(39);
+        $insert = [
+            'uid' => 39,
+            'friend_id' => 41,
+            'friend_group_id' => 7
+        ];
+        $friendIds = FriendRelation::query()
+//            ->where('id',20)
+            ->create($insert);
+        var_dump($friendIds);
+    }
+
+    /**
+     * @return int
+     */
+    public function testGetHistory ()
+    {
+
+        $history = FriendChatHistory::query()
+            ->whereNull('deleted_at')
+            ->where('from_uid', '=', 39)
+            ->where('to_uid', 40)
+            ->orWhere('from_uid', '=', 40)
+            ->where('to_uid', '=', 39)
+            ->orderBy('created_at', 'ASC')
+            ->forPage(1, 20)
+            ->get()
+            ->toArray();
+
+        $result = collect($history)->map(function ($item) {
+            $id = $item['from_uid'];
+            $user = User::findFromCache($id);
+            return [
+                'id' => $id,
+                'username' => $user['username'] ?? '',
+                'avatar' => $user['avatar'] ?? '',
+                'content' => $item['content'],
+                'timestamp' => Carbon::parse($item['created_at'])->timestamp * 1000,
+            ];
+        })->toArray();
+        debug_print(json_encode($result));
+        $this->assertIsArray($result, 'array');
+    }
+
+    public function testGetGroupRelation ()
+    {
+        $groupRelations = GroupRelation::query()
+            ->with(['user'])
+            ->whereNull('deleted_at')
+            ->where(['group_id' => 7])
+            ->get()
+            ->toArray();
+
+        $data['list'] = collect($groupRelations)->map(function ($item) {
+            return [
+                'id' => $item['id'],
+                'username' => $item['user']['username'] ?? '',
+                'avatar' => $item['user']['avatar'] ?? '',
+                'sign' => $item['user']['content'] ?? '',
+            ];
+        })->toArray();
+        $this->assertIsArray($data);
+        debug_print($data);
+    }
+
+    public function testGetFriends ()
+    {
+        $onlineFds = collect([]);
+        collect([40, 41])->each(function ($item, $key) use ($onlineFds) {
+//            $fd = TableManager::get(MemoryTable::USER_TO_FD)->get((string)$item, 'fd');
+            if ($item > 40) return $onlineFds->push($item);
+
+        });
+        var_dump($onlineFds);
+    }
+
+    /**
+     * @param $groups
+     * @return array
+     */
+    private function getGroupMap ($groups)
+    {
+        return collect($groups)->map(function ($item) {
+            $resp['id'] = $item['id'];
+            $resp['username'] = $item['user']['username'];
+            $resp['avatar'] = $item['user']['avatar'];
+            $resp['sign'] = $item['user']['sign'];
+            $resp['status'] = FriendRelation::STATUS_TEXT[$item['user']['status']];
+            return $resp;
+        })->toArray();
+
+    }
+
+
+}
