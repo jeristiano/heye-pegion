@@ -8,10 +8,8 @@ use Carbon\Carbon;
 use Hyperf\SocketIOServer\Annotation\Event;
 use Hyperf\SocketIOServer\Annotation\SocketIONamespace;
 use Hyperf\SocketIOServer\BaseNamespace;
-use Hyperf\SocketIOServer\SidProvider\SidProviderInterface;
 use Hyperf\SocketIOServer\Socket;
 use Hyperf\Utils\Codec\Json;
-use Hyperf\WebSocketServer\Sender;
 
 /**
  * @SocketIONamespace("/")
@@ -20,18 +18,18 @@ use Hyperf\WebSocketServer\Sender;
  */
 class WebSocketController extends BaseNamespace
 {
-
-    public function __construct (Sender $sender, SidProviderInterface $sidProvider)
-    {
-        $this->on('disconnect', function (Socket $socket) {
-            $this->adapter->del($socket->getSid());
-            $this->closeSocket($socket);
-        });
-
-        parent::__construct($sender, $sidProvider);
-
-
-    }
+//
+//    public function __construct (Sender $sender, SidProviderInterface $sidProvider)
+//    {
+//        $this->on('disconnect', function (Socket $socket) {
+//            $this->adapter->del($socket->getSid());
+//            $this->closeSocket($socket);
+//        });
+//
+//        parent::__construct($sender, $sidProvider);
+//
+//
+//    }
 
     private $colors = ['aliceblue', 'antiquewhite', 'aqua', 'aquamarine', 'pink', 'red', 'green', 'orange', 'blue', 'blueviolet', 'brown', 'burlywood', 'cadetblue'];
 
@@ -39,10 +37,11 @@ class WebSocketController extends BaseNamespace
      * @param string $message
      * @return string
      */
-    private function makeText (string $message)
+    private function makeText (string $message, string $author = 'system')
     {
         $res = [
             'text' => $message,
+            'author' => $author,
             'color' => collect($this->colors)->random(1)->toArray()[0],
             'time' => Carbon::now()->toDateTimeString(),
         ];
@@ -86,6 +85,29 @@ class WebSocketController extends BaseNamespace
     {
         $es = $this->makeText($socket->getSid() . '已经离开了,There are ' . count($socket->getAdapter()->clients()) . " players now");
         $this->broadcast->emit('broadcast', $es);
+    }
+
+    /**
+     * @Event("message")
+     * @param string $data
+     */
+    public function onMessage (Socket $socket, $data)
+    {
+        // 向房间内所有人广播（含当前用户）
+        $es = $this->makeText("{$data}", $socket->getSid());
+        $this->emit('message', $es);
+    }
+
+    /**
+     * @Event("disconnect")
+     * @param string $data
+     */
+    public function onDisconnect (Socket $socket)
+    {
+        //先删除这个离开的链接,在向全体推送
+        $this->adapter->del($socket->getSid());
+        $es = $this->makeText($socket->getSid() . '已经离开了,There are ' . count($socket->getAdapter()->clients()) . " players now");
+        $this->emit('broadcast', $es);
     }
 
 
