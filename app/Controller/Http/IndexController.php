@@ -64,13 +64,30 @@ class IndexController extends AbstractController
      */
     public function emit ()
     {
-        $message=$this->request->input("message",'fskdfjskdjflsa');
-        $fd=$this->request->input("fd",1);
+        $message = $this->request->input("message", 'fskdfjskdjflsa');
+        $fd = $this->request->input("fd", 1);
         $io = app()->get(SocketIO::class);
         $socketId = app()->get(SidProviderInterface::class)->getSid((int)$fd);
         echo $socketId . PHP_EOL;
         echo $message . PHP_EOL;
         return $io->to($socketId)->emit('message', $this->makeText($message, 'system'));
+
+    }
+
+    /**
+     * @RequestMapping(path="disconnect",methods="GET")
+     */
+    public function disconnect ()
+    {
+        $fd = $this->request->input("fd", 1);
+        $io = app()->get(SocketIO::class);
+        $socketId = app()->get(SidProviderInterface::class)->getSid((int)$fd);
+        echo $socketId . PHP_EOL;
+
+        $io->getAdapter()->del($socketId);
+
+        return $io->getAdapter()
+            ->clients();
 
     }
 

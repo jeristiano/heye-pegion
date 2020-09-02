@@ -1,28 +1,29 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 /**
  * This file is part of Hyperf.
- *
  * @link     https://www.hyperf.io
  * @document https://doc.hyperf.io
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf-cloud/hyperf/blob/master/LICENSE
  */
 
-use App\Middleware\AuthMiddleware;
-use App\Middleware\VideoAuthMiddleware;
+use App\Controller\Ws\WebSocketController;
+use App\Middleware\WebsocketMiddleware;
+use Hyperf\HttpServer\Router\DispatcherFactory;
 use Hyperf\HttpServer\Router\Router;
+use Hyperf\SocketIOServer\Collector\SocketIORouter;
+use Hyperf\SocketIOServer\SocketIO;
 
 Router::addRoute(['GET', 'POST', 'HEAD'], '/', 'App\Controller\Http\HomeController@index');
-Router::addServer('ws', function ()
-{
-    Router::get('/ws', 'App\Controller\Ws\WebSocketController', [
-        'middleware' => [AuthMiddleware::class]
-    ]);
-    Router::get('/video', 'App\Controller\Ws\VideoController', [
-//        'middleware' => [VideoAuthMiddleware::class]
-    ]);
-});
+
+//Router::addServer('socket-io', function ()
+//{
+//    Router::get('/socket-io', SocketIO::class, [
+//        'middleware' => [WebsocketMiddleware::class]
+//    ]);
+//
+//});
 
