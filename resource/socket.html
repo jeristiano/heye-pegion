@@ -32,13 +32,6 @@
         socket.on('connect_error', function(data){
             console.log(JSON.stringify(data)+ ' - connect_error');
         })
-        socket.on('connect_failed', function() {
-            document.write("Sorry, there seems to be an issue with the connection!");
-        })
-
-        socket.on('error', function(data){
-            console.log(data + ' - error');
-        });
 
 
         socket.on('event', function (json) {
