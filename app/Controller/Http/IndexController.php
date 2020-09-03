@@ -12,9 +12,11 @@ declare(strict_types=1);
 namespace App\Controller\Http;
 
 use App\Controller\AbstractController;
+use App\Controller\Ws\WebSocketController;
 use Carbon\Carbon;
 use Hyperf\HttpServer\Annotation\Controller;
 use Hyperf\HttpServer\Annotation\RequestMapping;
+use Hyperf\HttpServer\Router\DispatcherFactory;
 use Hyperf\SocketIOServer\SidProvider\SidProviderInterface;
 use Hyperf\SocketIOServer\SocketIO;
 use Hyperf\Utils\ApplicationContext;
@@ -89,6 +91,14 @@ class IndexController extends AbstractController
         return $io->getAdapter()
             ->clients();
 
+    }
+
+    /**
+     * @RequestMapping(path="test",methods="GET")
+     */
+    public function test ()
+    {
+        $instance = ApplicationContext::getContainer()->get(WebSocketController::class);
     }
 
 }

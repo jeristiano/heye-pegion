@@ -10,10 +10,14 @@ declare(strict_types=1);
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
 
+use App\Middleware\WebsocketMiddleware;
 use Hyperf\Validation\Middleware\ValidationMiddleware;
 
 return [
     'http' => [
         ValidationMiddleware::class
     ],
+    'socket-io'=>[
+        WebsocketMiddleware::class
+    ]
 ];

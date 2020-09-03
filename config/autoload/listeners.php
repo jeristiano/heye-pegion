@@ -10,8 +10,7 @@ declare(strict_types=1);
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
 
-use App\Listener\BeforeMainServerStartListener;
 
 return [
-    BeforeMainServerStartListener::class
+
 ];

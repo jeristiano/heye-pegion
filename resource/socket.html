@@ -25,28 +25,29 @@
         var myName = false;
         var socket = io('ws://127.0.0.1:9502', {transports: ["websocket"]});
         socket.on('connect', data => {
+            socket.emit('auth', {"uid": 312888, "app_id": 25822}, console.log);
             socket.emit('join-room', 'room1', console.log);
 
         });
 
-        socket.on('event', function (json){
-            json= JSON.parse(json);
-            p = '<p style="background:'+json.color+'">system  @ '+ json.time+ ' : Welcome ' + json.text +'</p>';
+        socket.on('event', function (json) {
+            json = JSON.parse(json);
+            p = '<p style="background:' + json.color + '">system  @ ' + json.time + ' : Welcome ' + json.text + '</p>';
             content.prepend(p);
         });
 
         //监听system事件，判断welcome或者disconnect，打印系统消息信息
-        socket.on('broadcast',function(json){
+        socket.on('broadcast', function (json) {
             var p = '';
-            json= JSON.parse(json);
-            p = '<p style="background:'+json.color+'">system  @ '+ json.time+ ' :' + json.text +'</p>';
+            json = JSON.parse(json);
+            p = '<p style="background:' + json.color + '">system  @ ' + json.time + ' :' + json.text + '</p>';
             content.prepend(p);
         });
 
         //监听message事件，打印消息信息
         socket.on('message', function (json) {
             var p = '';
-            json= JSON.parse(json);
+            json = JSON.parse(json);
             var p = '<p><span style="color:' + json.color + ';">' + json.author + '</span> @ ' + json.time + ' : ' + json.text + '</p>';
             content.prepend(p);
         });

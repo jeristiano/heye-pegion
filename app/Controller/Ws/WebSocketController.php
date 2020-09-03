@@ -4,9 +4,7 @@
 namespace App\Controller\Ws;
 
 
-use App\Middleware\WebsocketMiddleware;
 use Carbon\Carbon;
-use Hyperf\HttpServer\Annotation\Middleware;
 use Hyperf\SocketIOServer\Annotation\Event;
 use Hyperf\SocketIOServer\Annotation\SocketIONamespace;
 use Hyperf\SocketIOServer\BaseNamespace;
@@ -15,7 +13,6 @@ use Hyperf\Utils\Codec\Json;
 
 /**
  * @SocketIONamespace("/")
- * @Middleware(WebsocketMiddleware::class)
  */
 class WebSocketController extends BaseNamespace
 {
@@ -72,16 +69,9 @@ class WebSocketController extends BaseNamespace
      */
     public function onMessage (Socket $socket, $data)
     {
-        echo $socket->getSid();
-        if (!$socket->getSid()) {
-            $es = $this->makeText("已经离线了", $socket->getFd());
-            $this->emit('message', $es);
-
-        } else {
-            // 向房间内所有人广播（含当前用户）
-            $es = $this->makeText("{$data}", $socket->getSid());
-            $this->emit('message', $es);
-        }
+        // 向房间内所有人广播（含当前用户）
+        $es = $this->makeText("{$data}", $socket->getSid());
+        $this->emit('message', $es);
 
     }
 
@@ -95,16 +85,6 @@ class WebSocketController extends BaseNamespace
         $this->adapter->del($socket->getSid());
         $es = $this->makeText($socket->getSid() . '已经离开了,There are ' . count($socket->getAdapter()->clients()) . " players now");
         $this->emit('broadcast', $es);
-    }
-
-
-    /**
-     * @param \Hyperf\SocketIOServer\Socket $socket
-     */
-    public function onLeave (Socket $socket)
-    {
-        echo WebsocketMiddleware::class . PHP_EOL;
-        $socket->disconnect();
     }
 
 
