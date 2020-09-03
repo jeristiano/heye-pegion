@@ -23,12 +23,23 @@
         var status = $('#status');
         var input = $('#input');
         var myName = false;
-        var socket = io('ws://127.0.0.1:9502', {transports: ["websocket"]});
+        var socket = io('ws://127.0.0.1:9502',
+            {transports: ["websocket"],query:"uid=312888&token=7ba6b385e91c1bfb14dd6f7bd6d5601d"},);
         socket.on('connect', data => {
-            socket.emit('auth', {"uid": 312888, "app_id": 25822}, console.log);
             socket.emit('join-room', 'room1', console.log);
 
         });
+        socket.on('connect_error', function(data){
+            console.log(JSON.stringify(data)+ ' - connect_error');
+        })
+        socket.on('connect_failed', function() {
+            document.write("Sorry, there seems to be an issue with the connection!");
+        })
+
+        socket.on('error', function(data){
+            console.log(data + ' - error');
+        });
+
 
         socket.on('event', function (json) {
             json = JSON.parse(json);
