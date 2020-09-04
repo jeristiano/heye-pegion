@@ -21,6 +21,7 @@ class ErrorCode extends AbstractConstants
 {
     //基本错误码 0～1000
     const AUTH_ERROR = 401;
+    const ACCESS_FORBIDDEN = 3403;
     const USER_READY_ONLINE = 3001;
 
     //用户错误码 3000～3999
@@ -32,6 +33,7 @@ class ErrorCode extends AbstractConstants
         self::INVALID_PARAMETER => 'invalid parameter',
         self::AUTH_ERROR => 'Authorization has been denied for this request !',
         self::USER_READY_ONLINE => 'user already is online',
+        self::ACCESS_FORBIDDEN => 'you has no access to login',
 
     ];
 

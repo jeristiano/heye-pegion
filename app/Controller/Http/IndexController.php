@@ -13,10 +13,12 @@ namespace App\Controller\Http;
 
 use App\Constants\MemoryTable;
 use App\Controller\AbstractController;
+use App\Middleware\InternalNetworkMiddleware;
 use App\Request\BroadcastRequest;
 use App\Request\PushRequest;
 use Carbon\Carbon;
 use Hyperf\HttpServer\Annotation\Controller;
+use Hyperf\HttpServer\Annotation\Middleware;
 use Hyperf\HttpServer\Annotation\RequestMapping;
 use Hyperf\Memory\TableManager;
 use Hyperf\SocketIOServer\SocketIO;
@@ -25,7 +27,8 @@ use Hyperf\Utils\Codec\Json;
 /**
  * Class IndexController
  * @package App\Controller
- * @Controller(prefix="index")
+ * @Controller(prefix="notification")
+ * @Middleware(InternalNetworkMiddleware::class)
  */
 class IndexController extends AbstractController
 {
