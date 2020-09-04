@@ -38,16 +38,16 @@ class BeforeMainServerStartListener implements ListenerInterface
      */
     public function process (object $event)
     {
-//        $tableConfig = config('table');
-//        foreach ($tableConfig as $key => $item) {
-//            TableManager::initialize($key, $item['size']);
-//            Log::debug(sprintf('TableManager [%s] initialize...', $key));
-//            foreach ($item['columns'] as $columnKey => $column) {
-//                TableManager::get($key)->column($columnKey, $column['type'], $column['size']);
-//            }
-//            TableManager::get($key)->create();
-//        }
-//        AtomicManager::initialize(Atomic::NAME);
-//        Log::debug(sprintf('AtomicManager [%s] initialize...', Atomic::NAME));
+        $tableConfig = config('table');
+        foreach ($tableConfig as $key => $item) {
+            TableManager::initialize($key, $item['size']);
+            Log::debug(sprintf('TableManager [%s] initialize...', $key));
+            foreach ($item['columns'] as $columnKey => $column) {
+                TableManager::get($key)->column($columnKey, $column['type'], $column['size']);
+            }
+            TableManager::get($key)->create();
+        }
+        AtomicManager::initialize(Atomic::NAME);
+        Log::debug(sprintf('AtomicManager [%s] initialize...', Atomic::NAME));
     }
 }

@@ -4,7 +4,11 @@
 namespace App\Controller\Ws;
 
 
+use App\Component\Log;
+use App\Constants\MemoryTable;
 use Carbon\Carbon;
+use Hyperf\HttpServer\Contract\RequestInterface;
+use Hyperf\Memory\TableManager;
 use Hyperf\SocketIOServer\Annotation\Event;
 use Hyperf\SocketIOServer\Annotation\SocketIONamespace;
 use Hyperf\SocketIOServer\BaseNamespace;
@@ -69,6 +73,7 @@ class WebSocketController extends BaseNamespace
      */
     public function onMessage (Socket $socket, $data)
     {
+
         // 向房间内所有人广播（含当前用户）
         $es = $this->makeText("{$data}", $socket->getSid());
         $this->emit('message', $es);
@@ -81,10 +86,27 @@ class WebSocketController extends BaseNamespace
      */
     public function onDisconnect (Socket $socket)
     {
+
         //先删除这个离开的链接,在向全体推送
         $this->adapter->del($socket->getSid());
         $es = $this->makeText($socket->getSid() . '已经离开了,There are ' . count($socket->getAdapter()->clients()) . " players now");
         $this->emit('broadcast', $es);
+        $uid = TableManager::get(MemoryTable::FD_TO_USER)->get((string)$socket->getSid(), 'userId');
+        TableManager::get(MemoryTable::USER_TO_FD)->del((string)$uid);
+        TableManager::get(MemoryTable::FD_TO_USER)->del((string)$socket->getSid());
+        Log::debug('用户退出后解除绑定:' . $uid . '=>' . $socket->getSid());
+    }
+
+    /**
+     * @Event("connect")
+     * @param string $data
+     */
+    public function onConnect (Socket $socket)
+    {
+        $uid = app()->get(RequestInterface::class)->getAttribute('uid');
+        TableManager::get(MemoryTable::USER_TO_FD)->set((string)$uid, ['fd' => $socket->getSid()]);
+        TableManager::get(MemoryTable::FD_TO_USER)->set((string)$socket->getSid(), ['userId' => $uid]);
+        Log::debug('用户连接成功后绑定:' . $uid . '=>' . $socket->getSid());
     }
 
 

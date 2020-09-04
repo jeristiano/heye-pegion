@@ -11,6 +11,8 @@ declare(strict_types=1);
  */
 
 
-return [
+use App\Listener\BeforeMainServerStartListener;
 
+return [
+    BeforeMainServerStartListener::class
 ];

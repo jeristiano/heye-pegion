@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Middleware;
 
 use App\Component\Response;
+use App\Constants\MemoryTable;
 use App\Service\AuthenticateService;
+use Hyperf\Memory\TableManager;
 use Hyperf\Utils\Context;
 use Phper666\JWTAuth\JWT;
 use Psr\Container\ContainerInterface;
@@ -50,11 +52,23 @@ class WebsocketMiddleware implements MiddlewareInterface
             return $response->withStatus(400);
         }
 
+        $online = TableManager::get(MemoryTable::USER_TO_FD)->get((string)$uid);
+        if ($online) {
+            return $response->withStatus(403, '已经在线了');
+        }
+
         $result = make(AuthenticateService::class)->check($uid, $token);
         if (!$result) {
             // 阻止异常冒泡
             return $response->withStatus(401);
         }
+
+
+        //复写上下文
+        $request = Context::override(ServerRequestInterface::class, function (ServerRequestInterface $request)
+        use ($uid) {
+            return $request->withAttribute('uid', $uid);
+        });
         return $handler->handle($request);
 
     }

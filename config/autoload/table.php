@@ -17,8 +17,8 @@ return [
         'size'    => 1024 * 5,
         'columns' => [
             'userId' => [
-                'type' => Table::TYPE_INT,
-                'size' => 4
+                'type' => Table::TYPE_STRING,
+                'size' => 20
             ]
         ]
     ],
@@ -26,45 +26,9 @@ return [
         'size'    => 1024 * 5,
         'columns' => [
             'fd' => [
-                'type' => Table::TYPE_INT,
-                'size' => 4
-            ]
-        ]
-    ],
-    'subjectFdToUser' => [
-        'size'    => 1024 * 5,
-        'columns' => [
-            'userId' => [
-                'type' => Table::TYPE_INT,
-                'size' => 4
-            ]
-        ]
-    ],
-    'subjectUserToFd' => [
-        'size'    => 1024 * 5,
-        'columns' => [
-            'fd' => [
-                'type' => Table::TYPE_INT,
-                'size' => 4
-            ]
-        ]
-    ],
-    'subjectToUser'   => [
-        'size'    => 1024 * 5,
-        'columns' => [
-            'userId' => [
                 'type' => Table::TYPE_STRING,
-                'size' => 40
+                'size' => 20
             ]
         ]
     ],
-    'userToSubject'   => [
-        'size'    => 1024 * 5,
-        'columns' => [
-            'subject' => [
-                'type' => Table::TYPE_STRING,
-                'size' => 32
-            ]
-        ]
-    ]
 ];

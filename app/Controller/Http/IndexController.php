@@ -11,15 +11,15 @@ declare(strict_types=1);
 
 namespace App\Controller\Http;
 
+use App\Constants\MemoryTable;
 use App\Controller\AbstractController;
-use App\Controller\Ws\WebSocketController;
+use App\Request\BroadcastRequest;
+use App\Request\PushRequest;
 use Carbon\Carbon;
 use Hyperf\HttpServer\Annotation\Controller;
 use Hyperf\HttpServer\Annotation\RequestMapping;
-use Hyperf\HttpServer\Router\DispatcherFactory;
-use Hyperf\SocketIOServer\SidProvider\SidProviderInterface;
+use Hyperf\Memory\TableManager;
 use Hyperf\SocketIOServer\SocketIO;
-use Hyperf\Utils\ApplicationContext;
 use Hyperf\Utils\Codec\Json;
 
 /**
@@ -48,57 +48,52 @@ class IndexController extends AbstractController
     }
 
     /**
-     * @RequestMapping(path="login",methods="GET")
+     * 单点/群体推送
+     * @RequestMapping(path="push",methods="POST,GET")
      */
-    public function login ()
+    public function push (PushRequest $request)
     {
-//        $io= app()->get(SocketIO::class);
-        $io = ApplicationContext::getContainer()->get(SocketIO::class);
-        $io->emit('broadcast', $this->makeText('我开始广播了,今天下午不上学' . count($io->getAdapter()
-                ->clients())));
 
-        return $io->getAdapter()
-            ->clients();
-    }
-
-    /**
-     * @RequestMapping(path="send",methods="GET")
-     */
-    public function emit ()
-    {
-        $message = $this->request->input("message", 'fskdfjskdjflsa');
-        $fd = $this->request->input("fd", 1);
+        $users = $request->input('users');
+        $message = $request->input('data');
         $io = app()->get(SocketIO::class);
-        $socketId = app()->get(SidProviderInterface::class)->getSid((int)$fd);
-        echo $socketId . PHP_EOL;
-        echo $message . PHP_EOL;
-        return $io->to($socketId)->emit('message', $this->makeText($message, 'system'));
+
+        $offline = [];
+        foreach ($users as $uid) {
+            $socketId = TableManager::get(MemoryTable::USER_TO_FD)->get((string)$uid, 'fd');
+            $this->logger->debug($socketId);
+            if ($socketId) {
+                $io->to($socketId)->emit('message', $this->makeText($message));
+                continue;
+            }
+            $offline[] = $uid;
+        }
+        return $this->response->success($offline, 0, '已发送,其中以下用户不在线');
 
     }
 
+
     /**
-     * @RequestMapping(path="disconnect",methods="GET")
+     * @RequestMapping(path="broadcast",methods="POST")
      */
-    public function disconnect ()
+    public function broadcast (BroadcastRequest $request)
     {
-        $fd = $this->request->input("fd", 1);
+        $message = $request->input("data");
+        $this->logger->debug($message);
         $io = app()->get(SocketIO::class);
-        $socketId = app()->get(SidProviderInterface::class)->getSid((int)$fd);
-        echo $socketId . PHP_EOL;
-
-        $io->getAdapter()->del($socketId);
-
-        return $io->getAdapter()
-            ->clients();
-
+        $io->broadcast(true)->emit('broadcast', $this->makeText($message, 'system'));
+        return $this->response->success(null, 0, '已广播');
     }
 
+
     /**
-     * @RequestMapping(path="test",methods="GET")
+     * @RequestMapping(path="clients",methods="GET")
      */
-    public function test ()
+    public function clients ()
     {
-        $instance = ApplicationContext::getContainer()->get(WebSocketController::class);
+        $io = app()->get(SocketIO::class);
+        $rep['online_num']=count($io->getAdapter()->clients());
+        return $this->response->success($rep);
     }
 
 }
