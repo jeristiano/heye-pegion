@@ -94,6 +94,7 @@ class IndexController extends AbstractController
      */
     public function clients ()
     {
+
         $io = app()->get(SocketIO::class);
         $rep['online_num']=count($io->getAdapter()->clients());
         return $this->response->success($rep);
