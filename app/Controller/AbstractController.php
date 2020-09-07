@@ -42,11 +42,6 @@ abstract class AbstractController
     protected $response;
 
 
-    /**
-     * @Inject()
-     * @var RenderInterface
-     */
-    protected $view;
 
     /**
      * @var LoggerFactory

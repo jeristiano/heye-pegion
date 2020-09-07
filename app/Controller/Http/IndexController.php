@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace App\Controller\Http;
 
+use App\Constants\ErrorCode;
 use App\Constants\MemoryTable;
 use App\Controller\AbstractController;
 use App\Middleware\InternalNetworkMiddleware;
@@ -96,8 +97,24 @@ class IndexController extends AbstractController
     {
 
         $io = app()->get(SocketIO::class);
-        $rep['online_num']=count($io->getAdapter()->clients());
+        $rep['online_num'] = count($io->getAdapter()->clients());
         return $this->response->success($rep);
     }
+
+    /**
+     * @RequestMapping(path="disband",methods="GET")
+     */
+    public function disbandRoom ()
+    {
+        $validator = $this->validator->make($this->request->all(), ['room' => 'required']);
+        if ($validator->fails()) {
+            return $this->response->error(ErrorCode::INVALID_PARAMETER, $validator->errors()->first());
+        }
+
+        $io = app()->get(SocketIO::class);
+        $io->dismiss($this->request->input('room'));
+        return $this->response->success();
+    }
+
 
 }

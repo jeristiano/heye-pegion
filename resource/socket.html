@@ -24,8 +24,8 @@
         var input = $('#input');
         var myName = false;
         var socket = io('ws://127.0.0.1:9502',
-            // {transports: ["websocket"],query:"uid=312888&token=7ba6b385e91c1bfb14dd6f7bd6d5601d"},);
-            {transports: ["websocket"],query:"uid=70001&token=token"},);
+            {transports: ["websocket"],query:"uid=312888&token=7ba6b385e91c1bfb14dd6f7bd6d5601d"},);
+            // {transports: ["websocket"],query:"uid=70001&token=token"},);
         socket.on('connect', data => {
             socket.emit('join-room', 'room1', console.log);
 

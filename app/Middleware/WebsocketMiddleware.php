@@ -36,9 +36,8 @@ class WebsocketMiddleware implements MiddlewareInterface
 
     protected $jwt;
 
-    public function __construct (ContainerInterface $container, JWT $jwt)
+    public function __construct (ContainerInterface $container)
     {
-        $this->jwt = $jwt;
         $this->container = $container;
     }
 
