@@ -18,6 +18,6 @@ return [
         ValidationMiddleware::class
     ],
     'socket-io'=>[
-        WebsocketMiddleware::class
+//        WebsocketMiddleware::class
     ]
 ];

@@ -81,7 +81,7 @@ class WebSocketController extends BaseNamespace
     }
 
     /**
-     * @Event("disconnect")
+     * @Event("disconnects")
      * @param string $data
      */
     public function onDisconnect (Socket $socket)
@@ -98,7 +98,7 @@ class WebSocketController extends BaseNamespace
     }
 
     /**
-     * @Event("connect")
+     * @Event("connects")
      * @param string $data
      */
     public function onConnect (Socket $socket)
