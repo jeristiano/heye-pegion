@@ -33,8 +33,7 @@
                 </div>
             </form>
             <div>
-                &nbsp;&nbsp;&nbsp;&nbsp;<b>房间列表:</b>（当前在&nbsp;房间<?php echo isset($_GET['room_id']) && intval($_GET['room_id']) >
-                0 ? intval($_GET['room_id']) : 1; ?>
+                &nbsp;&nbsp;&nbsp;&nbsp;<b>房间列表:</b>（当前在&nbsp;房间1?>
                 ）<br>
                 &nbsp;&nbsp;&nbsp;&nbsp;<a href="/?room_id=1">房间1</a>&nbsp;&nbsp;&nbsp;&nbsp;<a
                     href="/?room_id=2">房间2</a>&nbsp;&nbsp;&nbsp;&nbsp;<a
@@ -84,22 +83,26 @@
 </html>
 <script type="text/javascript">
     var socket, name, client_list = {};
+    var socket = io('ws://127.0.0.1:9502/chat', {transports: ["websocket"]},);
 
     function connect() {
-        var socket = io('ws://127.0.0.1:9502',
-            {
-                transports: ["websocket"],
-                query: "uid=312888&token=7ba6b385e91c1bfb14dd6f7bd6d5601d"
-            },);
-        // {transports: ["websocket"],query:"uid=70001&token=token"},);
+
         socket.on('connect', data => {
-            login_data=  onopen()
-            // ws.send(login_data);
+            login_data = onopen()
             console.log("websocket握手成功，发送登录数据:" + login_data);
+            socket.emit('join-room', login_data, console.log);
+
         });
         socket.on('connect_error', function (data) {
             console.log(JSON.stringify(data) + ' - connect_error');
         })
+
+        //监听message事件，打印消息信息
+        socket.on('message', function (json) {
+            onmessage(json);
+        });
+
+
     }
 
 
@@ -115,6 +118,43 @@
 
     }
 
+    function sendMessage(message) {
+        socket.emit('message', message)
+
+    }
+
+    // 服务端发来消息时
+    function onmessage(e) {
+        console.log(e);
+        var data = JSON.parse(e);
+        switch (data['type']) {
+
+            // 登录 更新用户列表
+            case 'login':
+                //{"type":"login","client_id":xxx,"client_name":"xxx","client_list":"[...]","time":"xxx"}
+                say(data['client_id'], data['client_name'], data['client_name'] + ' 加入了聊天室', data['time']);
+                if (data['client_list']) {
+                    client_list = data['client_list'];
+                } else {
+                    client_list[data['client_id']] = data['client_name'];
+                }
+                flush_client_list();
+                console.log(data['client_name'] + "登录成功");
+                break;
+            // 发言
+            case 'say':
+                //{"type":"say","from_client_id":xxx,"to_client_id":"all/client_id","content":"xxx","time":"xxx"}
+                say(data['from_client_id'], data['from_client_name'], data['content'], data['time']);
+                break;
+            // 用户退出 更新用户列表
+            case 'logout':
+                //{"type":"logout","client_id":xxx,"time":"xxx"}
+                say(data['from_client_id'], data['from_client_name'], data['from_client_name'] + ' 退出了', data['time']);
+                delete client_list[data['from_client_id']];
+                flush_client_list();
+        }
+    }
+
     // 输入姓名
     function show_prompt() {
         name = prompt('输入你的名字：', '');
@@ -123,5 +163,65 @@
         }
     }
 
+    // 发言
+    function say(from_client_id, from_client_name, content, time) {
+        //解析新浪微博图片
+        content = content.replace(/(http|https):\/\/[\w]+.sinaimg.cn[\S]+(jpg|png|gif)/gi, function (img) {
+                return "<a target='_blank' href='" + img + "'>" + "<img src='" + img + "'>" + "</a>";
+            }
+        );
 
+        //解析url
+        content = content.replace(/(http|https):\/\/[\S]+/gi, function (url) {
+                if (url.indexOf(".sinaimg.cn/") < 0)
+                    return "<a target='_blank' href='" + url + "'>" + url + "</a>";
+                else
+                    return url;
+            }
+        );
+
+        $("#dialog").append('<div class="speech_item"><img src="http://lorempixel.com/38/38/?' + from_client_id + '" class="user_icon" /> ' + from_client_name + ' <br> ' + time + '<div style="clear:both;"></div><p class="triangle-isosceles top">' + content + '</p> </div>').parseEmotion();
+    }
+
+    $(function () {
+        select_client_id = 'all';
+        $("#client_list").change(function () {
+            select_client_id = $("#client_list option:selected").attr("value");
+        });
+        $('.face').click(function (event) {
+            $(this).sinaEmotion();
+            event.stopPropagation();
+        });
+    });
+
+    // 刷新用户列表框
+    function flush_client_list() {
+        var userlist_window = $("#userlist");
+        var client_list_slelect = $("#client_list");
+        userlist_window.empty();
+        client_list_slelect.empty();
+        userlist_window.append('<h4>在线用户</h4><ul>');
+        client_list_slelect.append('<option value="all" id="cli_all">所有人</option>');
+        for (var p in client_list) {
+            userlist_window.append('<li id="' + p + '">' + client_list[p] + '</li>');
+            client_list_slelect.append('<option value="' + p + '">' + client_list[p] + '</option>');
+        }
+        $("#client_list").val(select_client_id);
+        userlist_window.append('</ul>');
+    }
+
+
+    // 提交对话
+    function onSubmit() {
+        var input = document.getElementById("textarea");
+        var to_client_id = $("#client_list option:selected").attr("value");
+        var room_id =1;
+        var to_client_name = $("#client_list option:selected").text();
+        sendMessage('{"type":"say","room_id":"' + room_id + '","to_client_id":"' + to_client_id + '","to_client_name":"' +
+            to_client_name + '","content":"' + input.value.replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\r/g, '\\r') + '"}')
+        input.value = "";
+        input.focus();
+
+
+    }
 </script>

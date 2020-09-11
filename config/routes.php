@@ -16,10 +16,3 @@ use Hyperf\SocketIOServer\SocketIO;
 
 Router::addRoute(['GET', 'POST', 'HEAD'], '/', 'App\Controller\Http\HomeController@index');
 
-//Router::addServer('socket-io', function () {
-//    Router::get('/socket-io/', SocketIO::class, [
-//        'middleware' => [WebsocketMiddleware::class]
-//    ]);
-//
-//});
-
